@@ -3,6 +3,10 @@ Getting started with Go for Data Processing Pipeline (DPP) CLI tool
 
 # References
 
+## AWS SDK for Go
+* [AWS - AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/)
+* [GO - AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2)
+
 # Getting started
 * Check the latest versions/tags:
   https://github.com/data-engineering-helpers/data-pipeline-deployment/tags
@@ -22,6 +26,7 @@ $ go mod tidy
 ```bash
 $ go test
 ```
+
 * Tag the Git repository:
 ```bash
 $ git commit -m "[Release][Go] v0.0.x-alpha.x"
@@ -53,8 +58,8 @@ $ pushd tests
 $ got mod init check-dppctl
 $ go mod edit -replace github.com/data-engineering-helpers/data-pipeline-deployment/go/dppctl=../dppctl
 $ go mod tidy
-$ go run .
-$ go build
+$ go run check-dppctl.go
+$ go build check-dppctl.go
 $ ./check-dppctl
 $ popd
 ```
@@ -66,6 +71,12 @@ $ go list -f '{{.Target}}'
 $ go install
 $ ls -laFh ~/go/bin/check-dppctl
 -rwxr-xr-x  1 user staff 2.1M Mar 17 16:23 /Users/DENIS/go/bin/check-dppctl*
+```
+
+* Run the AWS checker:
+```bash
+$ go run check-aws.go
+$ go build check-aws.go
 ```
 
 
