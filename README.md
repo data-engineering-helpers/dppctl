@@ -1,7 +1,19 @@
 Getting started with Go for Data Processing Pipeline (DPP) CLI tool
 ===================================================================
 
+# Overview
+[This project](https://github.com/data-engineering-helpers/dppctl)
+intends to develop and maintain a command-line (CLI) utility in Go
+to help deploy data engineering pipelines on modern data stack (MDS).
+
+Even though the members of the GitHub organization may be employed by
+some companies, they speak on their personal behalf and do not represent
+these companies.
+
 # References
+* [Data engineering pipeline deployment on the Modern Data Stack (MDS)](https://github.com/data-engineering-helpers/data-pipeline-deployment)
+* [Architecture principles for data engineering pipelines on the Modern Data Stack (MDS)](https://github.com/data-engineering-helpers/architecture-principles)
+* [Data Processing Pipeline (DPP) utility in Go (this repository)](https://github.com/data-engineering-helpers/dppctl)
 
 ## AWS SDK for Go
 * [AWS - AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/)
