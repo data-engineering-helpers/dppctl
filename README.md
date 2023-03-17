@@ -18,6 +18,7 @@ these companies.
 ## AWS SDK for Go
 * [AWS - AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/)
 * [GO - AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2)
+* [AWS on GitHub - AWS SDK code examples in Go v2](https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/gov2)
 
 # Getting started
 * Check the latest versions/tags:
