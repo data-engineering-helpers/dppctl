@@ -7,8 +7,6 @@ import (
   "errors"
 )
 
-import "rsc.io/quote"
-
 // Hello returns a greeting for the named person.
 func Hello(name string) (string, error) {
     // If no name was given, return an error with a message.
@@ -21,9 +19,4 @@ func Hello(name string) (string, error) {
     return message, nil
 }
 
-func main() {
-  name := "Data Processing Pipeline (DPP) CLI utility"
-  fmt.Println(Hello(name))
-  fmt.Println(quote.Go())
-}
 
