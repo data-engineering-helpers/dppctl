@@ -7,6 +7,7 @@ replace github.com/data-engineering-helpers/dppctl => ../
 require (
 	github.com/aws/aws-sdk-go-v2 v1.17.6
 	github.com/aws/aws-sdk-go-v2/config v1.18.18
+	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.6
 	github.com/data-engineering-helpers/dppctl/service v0.0.0-00010101000000-000000000000
