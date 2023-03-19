@@ -1,4 +1,4 @@
-// File: https://github.com/data-engineering-helpers/dppctl/blob/main/go/dppctl/dppctl.go
+// File: https://github.com/data-engineering-helpers/dppctl/blob/main/dppctl.go
 
 package dppctl
 
