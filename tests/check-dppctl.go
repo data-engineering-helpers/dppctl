@@ -6,17 +6,23 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	
 	"github.com/data-engineering-helpers/dppctl/service"
 )
 
+const AppVersion = "0.0.1-alpha.1"
+
 var (
 	bucketName string
+	versionFlag bool
 )
 
 func init() {
 	flag.StringVar(&bucketName, "bucket", "baldwins",
 		"The `name` of the S3 bucket to list item from.")
+
+	flag.BoolVar(&versionFlag, "v", false, "Shows the current version")
 }
 
 func main() {
@@ -28,7 +34,11 @@ func main() {
 
 	//
 	flag.Parse()
-	
+	if versionFlag {
+      log.Println(AppVersion)
+      os.Exit(0)
+    }
+
 	// STS - Caller identity (IAM)
 	stsStruct, err := service.AWSGetCallerIdentity()
 	if err != nil {
