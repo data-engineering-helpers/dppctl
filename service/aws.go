@@ -110,7 +110,7 @@ func AWSCodeArtifact() ([]string, error) {
     return messages, nil
 }
 
-func AWSS3List(bucketName string) ([]string, error) {
+func AWSS3List(bucketName string, prefix string) ([]string, error) {
     messages := []string {}
 
     //
@@ -124,6 +124,7 @@ func AWSS3List(bucketName string) ([]string, error) {
     // Get the first page of results for ListObjectsV2 for a bucket
 	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
+		Prefix: aws.String(prefix),
 	}
     output, err := svc.ListObjectsV2(context.TODO(), params)
     if err != nil {

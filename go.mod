@@ -2,7 +2,10 @@ module github.com/data-engineering-helpers/dppctl
 
 go 1.20
 
-require github.com/data-engineering-helpers/dppctl/service v0.0.0-20230320112752-76e6e9483a6f
+require (
+	github.com/data-engineering-helpers/dppctl/service v0.0.0-20230320112752-76e6e9483a6f
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.17.6 // indirect
@@ -28,3 +31,7 @@ require (
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 )
+
+replace github.com/data-engineering-helpers/dppctl/service => ./service
+
+replace github.com/data-engineering-helpers/dppctl/utilities => ./utilities

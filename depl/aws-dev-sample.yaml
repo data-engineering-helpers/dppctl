@@ -1,0 +1,41 @@
+#
+# File: File: https://github.com/data-engineering-helpers/dppctl/blob/main/depl/aws-dev-sample.yaml
+#
+metadata:
+  env: dev
+  project: example-project
+  git_url: https://github.com/data-engineering-helpers/dppctl/blob/main/depl/aws-dev-sample.yaml
+
+container:
+  module:
+    stack: python
+    name: induction-spark-basic
+    version: 0.0.1
+
+  dependencies:
+    spark:
+      version: 3.3.0
+    delta_spark:
+      version: 2.1.1
+
+artifact_repo:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  domain: example-domain
+  name: example-repo
+
+container_repo:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  domain: example-domain
+  name: example-repo
+
+storage_container:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  name: example-bucket
+  prefix: example-prefix
+
