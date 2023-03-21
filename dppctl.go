@@ -5,6 +5,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
     "gopkg.in/yaml.v3"
@@ -82,19 +83,26 @@ func main() {
 		log.Println(object_metadata)
 	}
 
-	// DynamoDB
-	table_list, err := service.AWSDynamodDB()
-	log.Println("List of tables in the DynamoDB service:")
-	for _, table := range table_list {
-		log.Println(table)
-	}
-
 	// CodeArtifact
 	domain_list, err := service.AWSCodeArtifact()
+	if err != nil {
+		log.Print(err)
+	}
 	log.Println("List of domains within the CodeArtifact service:")
 	for _, domain := range domain_list {
 		log.Println(domain)
 	}
+
+	// MWAA/Airflow
+	mwaaEnv := "mutualized-dev"
+	webServerHostname, cliToken, resultMetadata,
+		err := service.AWSAirflowCreateLoginToken(mwaaEnv)
+	if err != nil {
+		log.Print(err)
+	}
+	mwaaStr := fmt.Sprintf("hostname=%s token=%s metadata=%s",
+		webServerHostname, cliToken, resultMetadata)
+	log.Println("MWAA/Airflow CLI token created: ", mwaaStr)	
 }
 
 

@@ -39,3 +39,31 @@ storage_container:
   name: example-bucket
   prefix: example-prefix
 
+airflow:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  domain: example-domain
+  dag:
+    name_pattern: example-pattern
+    tag: example-tag
+  storage_container:
+    name: example-bucket
+    prefix: example-prefix
+
+compute_engine:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  domain: example-domain
+  cluster:
+    name: example-cluster
+    version: 6.9.0
+  
+kubernetes:
+  provider: aws
+  region: eu-west-1
+  acct_id: 123456789
+  domain: example-domain
+  namespace: example-namespace
+

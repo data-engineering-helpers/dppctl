@@ -39,6 +39,15 @@ type SpecFile struct {
 	
 	// Details of the environment to be deployed
 
+	// Storage container (e.g., AWS S3 bucket, Azure Data Storage, GCS)
+	StorageContainer struct {
+		Provider string `yaml:"provider"`
+		Region string `yaml:"region"`
+		AccountId string `yaml:"acct_id"`
+		Name string `yaml:"name"`
+		Prefix string `yaml:"prefix"`
+	} `yaml:"storage_container"`
+
 	// Repository for the software artifacts
 	ArtifactRepo struct {
 		Provider string `yaml:"provider"`
@@ -57,14 +66,48 @@ type SpecFile struct {
 		Name string `yaml:"name"`
 	} `yaml:"container_repo"`
 
-	// Storage container (e.g., AWS S3 bucket, Azure Data Storage, GCS)
-	StorageContainer struct {
+	// Airflow service (e.g., AWS MWAA)
+	Airflow struct {
 		Provider string `yaml:"provider"`
 		Region string `yaml:"region"`
 		AccountId string `yaml:"acct_id"`
-		Name string `yaml:"name"`
-		Prefix string `yaml:"prefix"`
-	} `yaml:"storage_container"`
+		Domain string `yaml:"domain"`
+
+		//
+		Dag struct {
+			NamePattern string `yaml:"name_pattern"`
+			Tag string `yaml:"tag"`
+		} `yaml:"dag"`
+
+		StorageContainer struct {
+			Name string `yaml:"name"`
+			Prefix string `yaml:"prefix"`
+		} `yaml:"storage_container"`
+	} `yaml:"airflow"`
+
+	// Compute engine (e.g., Spark on DataBricks, Spark on AWS EMR)
+	ComputeEngine struct {
+		Provider string `yaml:"provider"`
+		Region string `yaml:"region"`
+		AccountId string `yaml:"acct_id"`
+		Domain string `yaml:"domain"`
+
+		//
+		Cluster struct {
+			Name string `yaml:"name"`
+			Version string `yaml:"version"`
+		} `yaml:"cluster"`
+	} `yaml:"compute_engine"`
+
+
+	// Kubernetes service (e.g., AWS EKS)
+	Kubernetes struct {
+		Provider string `yaml:"provider"`
+		Region string `yaml:"region"`
+		AccountId string `yaml:"acct_id"`
+		Domain string `yaml:"domain"`
+		Namespace string `yaml:"Namespace"`
+	} `yaml:"kubernetes"`
 }
 
 func ReadSpecFile(specFilepath string) (SpecFile, error) {

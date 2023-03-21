@@ -12,10 +12,11 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/mwaa"
+	"github.com/aws/smithy-go/middleware"
 )
 
 var (
@@ -43,39 +44,50 @@ func AWSGetCallerIdentity() (string, error) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
-	client := sts.NewFromConfig(awsConfig)
+    // Create an Amazon STS service client
+	svc := sts.NewFromConfig(awsConfig)
+
+	// Get the IAM role
 	params := &sts.GetCallerIdentityInput{}
-	resp, err := client.GetCallerIdentity(ctx, params)
+	output, err := svc.GetCallerIdentity(ctx, params)
 	if err != nil {
 		log.Fatalf("expect no error, got %v", err)
 	}
 
 	sts_identity := fmt.Sprintf("UserId=%s Account=%s Arn=%s",
-		aws.ToString(resp.UserId),
-		aws.ToString(resp.Account),
-		aws.ToString(resp.Arn))
+		aws.ToString(output.UserId),
+		aws.ToString(output.Account),
+		aws.ToString(output.Arn))
 
     //
     return sts_identity, nil
 }
 
-func AWSDynamodDB() ([]string, error) {
+func AWSS3List(bucketName string, prefix string) ([]string, error) {
     messages := []string {}
 
-    // Using the Config value, create the DynamoDB client
-    svc := dynamodb.NewFromConfig(awsConfig)
-
-    // Build the request with its input parameters
-	params := &dynamodb.ListTablesInput{
-        Limit: aws.Int32(5),
+    //
+    if bucketName == "" {
+        return messages, errors.New("empty bucket name")
     }
-    resp, err := svc.ListTables(context.TODO(), params)
+
+    // Create an Amazon S3 service client
+    svc := s3.NewFromConfig(awsConfig)
+
+    // Get the first page of results for ListObjectsV2 for a bucket
+	params := &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+		Prefix: aws.String(prefix),
+	}
+    output, err := svc.ListObjectsV2(context.TODO(), params)
     if err != nil {
-        log.Fatalf("failed to list tables, %v", err)
+		log.Fatal(err)
     }
 
-    for _, tableName := range resp.TableNames {
-		messages = append(messages, tableName)
+    for _, object := range output.Contents {
+		message := fmt.Sprintf("Key=%s size=%d",
+			aws.ToString(object.Key), object.Size)
+		messages = append(messages, message)
     }
 
     //
@@ -110,34 +122,39 @@ func AWSCodeArtifact() ([]string, error) {
     return messages, nil
 }
 
-func AWSS3List(bucketName string, prefix string) ([]string, error) {
-    messages := []string {}
+func AWSAirflowCreateLoginToken(environment string) (string, string,
+	middleware.Metadata, error) {
+	// References:
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/mwaa/api_op_CreateCliToken.go
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/mwaa/api_op_CreateWebLoginToken.go
+	// * https://github.com/aws/smithy-go/blob/main/middleware/metadata.go
+	cliToken := ""
+	webServerHostname := ""
+	var resultMetadata middleware.Metadata
 
     //
-    if bucketName == "" {
-        return messages, errors.New("empty bucket name")
+    if environment == "" {
+        return webServerHostname, cliToken, resultMetadata,
+			errors.New("empty Airflow/MWAA environment")
     }
 
-    // Create an Amazon S3 service client
-    svc := s3.NewFromConfig(awsConfig)
+    // Create an Amazon MWAA (managed Airflow service) client
+    svc := mwaa.NewFromConfig(awsConfig)
 
-    // Get the first page of results for ListObjectsV2 for a bucket
-	params := &s3.ListObjectsV2Input{
-		Bucket: aws.String(bucketName),
-		Prefix: aws.String(prefix),
+    // Create a token for login through MWAA CLI API
+	params := &mwaa.CreateCliTokenInput{
+		Name: aws.String(environment),
 	}
-    output, err := svc.ListObjectsV2(context.TODO(), params)
+    output, err := svc.CreateCliToken(context.TODO(), params)
     if err != nil {
 		log.Fatal(err)
     }
 
-    for _, object := range output.Contents {
-		message := fmt.Sprintf("Key=%s size=%d",
-			aws.ToString(object.Key), object.Size)
-		messages = append(messages, message)
-    }
+	webServerHostname = aws.ToString(output.WebServerHostname)
+	cliToken = aws.ToString(output.CliToken)
+	resultMetadata = output.ResultMetadata
 
     //
-    return messages, nil
+    return webServerHostname, cliToken, resultMetadata, nil
 }
 
