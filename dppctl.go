@@ -94,15 +94,23 @@ func main() {
 	}
 
 	// MWAA/Airflow
-	mwaaEnv := "mutualized-dev"
-	webServerHostname, cliToken, resultMetadata,
+	mwaaEnv := depl_spec.Airflow.Domain
+	webServerHostname, cliToken, _,
 		err := service.AWSAirflowCreateLoginToken(mwaaEnv)
 	if err != nil {
 		log.Print(err)
 	}
-	mwaaStr := fmt.Sprintf("hostname=%s token=%s metadata=%s",
-		webServerHostname, cliToken, resultMetadata)
-	log.Println("MWAA/Airflow CLI token created: ", mwaaStr)	
+	mwaaStr := fmt.Sprintf("hostname=%s token=%s", webServerHostname, cliToken)
+	log.Println("MWAA/Airflow CLI token created: ", mwaaStr)
+
+	//
+	command := "version"
+	stdoutStr, err := service.AWSAirflowCLI(webServerHostname, cliToken,
+		command)
+	if err != nil {
+		log.Print(err)
+	}
+	log.Println("MWAA/Airflow CLI response: ", stdoutStr)
 }
 
 

@@ -6,10 +6,15 @@ package service
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"time"
 	"log"
 	"flag"
 	"errors"
+	"net/http"
+	"encoding/json"
+	"encoding/base64"
+	"bytes"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -38,6 +43,12 @@ func init() {
         log.Fatalf("unable to load SDK config, %v", err)
     }
 	awsConfig = cfg
+}
+
+// A Response struct to map the MWAA CLI API response
+type MWAAResponse struct {
+    StdErr string `json:"stderr"`
+    StdOut string `json:"stdout"`
 }
 
 func AWSGetCallerIdentity() (string, error) {
@@ -156,5 +167,59 @@ func AWSAirflowCreateLoginToken(environment string) (string, string,
 
     //
     return webServerHostname, cliToken, resultMetadata, nil
+}
+
+func AWSAirflowCLI(webServerHostname string, cliToken string,
+	command string) (string, error) {
+	stdoutStr := ""
+	
+    //
+    if command == "" {
+        return stdoutStr, errors.New("empty MWAA CLI command")
+    }
+
+	api_url := fmt.Sprintf("https://%s/aws_mwaa/cli", webServerHostname)
+	body := []byte(fmt.Sprintf(command))
+    request, err := http.NewRequest("POST", api_url, bytes.NewBuffer(body))
+    if err != nil {
+		log.Fatal(err)
+    }
+
+	// Add the headers
+	request.Header.Add("Content-Type", "text/plain")
+
+	bearerToken := fmt.Sprintf("Bearer %s", cliToken)
+	request.Header.Add("Authorization", bearerToken)
+
+	// Call the API
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer response.Body.Close()
+
+	responseData, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        log.Fatal(err)
+    }
+	log.Println("MWAA response data: ", string(responseData))
+
+	// Map the HTTP reponse onto a MWAAResponse structure
+	var mwaaResponseObject MWAAResponse
+	json.Unmarshal(responseData, &mwaaResponseObject)
+	stdoutB64Str := mwaaResponseObject.StdOut
+
+	// Base64 decode the `stdout` string
+	stdoutData, err := base64.StdEncoding.DecodeString(stdoutB64Str)
+	if err != nil {
+		log.Fatal("error:", err)
+	}
+
+	stdoutStr = string(stdoutData)
+
+	//
+	return stdoutStr, nil
 }
 
