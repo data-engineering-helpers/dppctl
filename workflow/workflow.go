@@ -42,7 +42,7 @@ func Check(deplSpec utilities.SpecFile) {
 	// /////////////////////////////////
 	// CodeArtifact
 	// /////////////////////////////////
-	domain_list, err := service.AWSCodeArtifact()
+	domain_list, err := service.AWSCodeArtifactListDomains()
 	if err != nil {
 		log.Print(err)
 	}
@@ -51,6 +51,22 @@ func Check(deplSpec utilities.SpecFile) {
 		log.Println(domain)
 	}
 
+	//
+	caDomainName := deplSpec.ArtifactRepo.Domain
+	caDomainOwner := deplSpec.ArtifactRepo.AccountId
+	caRepoName := deplSpec.ArtifactRepo.Name
+	caRepoFormatStr := deplSpec.ArtifactRepo.Format
+	packageName := deplSpec.Container.Module.Name
+	//packageVersion := deplSpec.Container.Module.Version
+
+	caRepoFormat, err := service.AWSCodeArtifactFormatFromString(caRepoFormatStr)
+    if err != nil {
+		errMsg := fmt.Sprintf("The %s CodeArtifact repository format is not known")
+        log.Fatalf(errMsg, err)
+    }
+	service.AWSCodeArtifactListPackageVersions(caDomainName, caDomainOwner,
+		caRepoName, caRepoFormat, packageName)
+	
 	// /////////////////////////////////
 	// MWAA/Airflow
 	// /////////////////////////////////

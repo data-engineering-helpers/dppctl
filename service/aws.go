@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	awscatypes "github.com/aws/aws-sdk-go-v2/service/codeartifact/types"	
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/smithy-go/middleware"
 )
@@ -105,7 +106,7 @@ func AWSS3List(bucketName string, prefix string) ([]string, error) {
     return messages, nil
 }
 
-func AWSCodeArtifact() ([]string, error) {
+func AWSCodeArtifactListDomains() ([]string, error) {
 	// References:
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/types/types.go
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/api_op_ListDomains.go
@@ -129,6 +130,92 @@ func AWSCodeArtifact() ([]string, error) {
 		messages = append(messages, message)
     }
 
+    //
+    return messages, nil
+}
+
+func AWSCodeArtifactFormatFromString(format string) (awscatypes.PackageFormat,
+	error) {
+	switch format {
+	case "pypi":
+		return awscatypes.PackageFormatPypi, nil
+	case "maven":
+		return awscatypes.PackageFormatMaven, nil
+	}
+
+	errMsg := fmt.Sprintf("The %s CodeArtifact repository format is not known")
+	return awscatypes.PackageFormatGeneric, errors.New(errMsg)
+}
+
+func AWSCodeArtifactListPackageVersions(domainName string,
+	domainOwner string, repoName string, repoFormat awscatypes.PackageFormat,
+	packageName string) ([]string, error) {
+	// References:
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/types/types.go
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/api_op_ListPackageVersions.go
+	
+    messages := []string {}
+
+    // Using the Config value, create the CodeArtifact client
+    svc := codeartifact.NewFromConfig(awsConfig)
+
+    // Build the request with its input parameters
+	params := &codeartifact.ListPackageVersionsInput{
+		Domain: aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
+		Format: repoFormat,
+		Repository: aws.String(repoName),
+		Package: aws.String(packageName),
+	}
+    resp, err := svc.ListPackageVersions(context.TODO(), params)
+    if err != nil {
+        log.Fatalf("failed to list the versions of the package, %v", err)
+    }
+
+	// https://docs.aws.amazon.com/codeartifact/latest/APIReference/API_PackageVersionSummary.html
+    for _, version := range resp.Versions {
+		message := fmt.Sprintf("Origin=%s Revision=%s Version=%s Status=%s",
+			version.Origin, version.Revision, version.Version,
+			version.Status)
+		messages = append(messages, message)
+    }
+
+    //
+    return messages, nil
+}
+
+func AWSCodeArtifactDescribePackageVersion(domainName string,
+	domainOwner string, repoName string, repoFormat awscatypes.PackageFormat,
+	packageName string, packageVersion string) ([]string, error) {
+	// References:
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/types/types.go
+	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/api_op_DescribePackageVersion.go
+	
+    messages := []string {}
+
+    // Using the Config value, create the CodeArtifact client
+    svc := codeartifact.NewFromConfig(awsConfig)
+
+    // Build the request with its input parameters
+	params := &codeartifact.DescribePackageVersionInput{
+		Domain: aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
+		Format: repoFormat,
+		Repository: aws.String(repoName),
+		Package: aws.String(packageName),
+		PackageVersion: aws.String(packageVersion),
+	}
+    resp, err := svc.DescribePackageVersion(context.TODO(), params)
+    if err != nil {
+        log.Fatalf("failed to describe package for the specific version, %v",
+			err)
+    }
+
+	// https://docs.aws.amazon.com/codeartifact/latest/APIReference/API_PackageVersionDescription.html
+	// TODO: PackageVersion
+	packageVersionDesc := resp.PackageVersion
+	log.Println("Package version: ", packageVersionDesc)
+	
     //
     return messages, nil
 }

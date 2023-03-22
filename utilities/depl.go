@@ -53,6 +53,7 @@ type SpecFile struct {
 		Provider string `yaml:"provider"`
 		Region string `yaml:"region"`
 		AccountId string `yaml:"acct_id"`
+		Format string `yaml:"format"`
 		Domain string `yaml:"domain"`
 		Name string `yaml:"name"`
 	} `yaml:"artifact_repo"`
