@@ -92,4 +92,76 @@ $ go run check-aws.go
 $ go build check-aws.go
 ```
 
+# Troubleshooting
+
+## AWS Airflow (MWAA)
+As of beginning of 2023, apparently for security reasons, it does not seem
+possible to target/use the Airflow API directly on
+the AWS managed service (MWAA). One has to use instead the API backend
+of the MWAA CLI. That is why the Go code of
+[the corresponding `AWSAirflowCLI()` function](https://github.com/data-engineering-helpers/dppctl/blob/main/service/aws.go#AWSAirflowCLI)
+is not straightforward.
+Note that the use of the MWAA CLI API (through `curl`) is itself
+convoluted, as detailed below.
+	 
+### References
+* [Stack Overflow - Is it possible to access the Airflow API in AWS MWAA?](https://stackoverflow.com/questions/67884770/is-it-possible-to-access-the-airflow-api-in-aws-mwaa)
+* [Apache Airflow - Airflow API reference guide](https://airflow.apache.org/docs/apache-airflow/stable/stable-rest-api-ref.html)
+* [AWS - Amazon Managed Workflows for Apache Airflow (MWAA) User Guide](https://docs.aws.amazon.com/mwaa/index.html)
+   + [AWS - Accessing the Apache Airflow UI](https://docs.aws.amazon.com/mwaa/latest/userguide/access-airflow-ui.html)
+     - [AWS - Apache Airflow CLI command reference](https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-cli-command-reference.html) 
+* [GitHub - AWS - Sample code for MWAA](https://github.com/aws-samples/amazon-mwaa-examples)
+  + [GitHub - AWS - Sample code for MWAA - Bash operator script](https://github.com/aws-samples/amazon-mwaa-examples/tree/main/dags/bash_operator_script)
+
+### Listing the DAGs
+* Configuration:
+```bash
+$ export MWAA_ENV="<the-MWAA-environment-name"
+  export AWS_REGION="eu-west-1"
+  export CLI_TOKEN
+  export WEB_SERVER_HOSTNAME
+```
+
+* Create a CLI (command-line) token:
+```bash
+$ aws mwaa --region $AWS_REGION create-cli-token --name $MWAA_ENV
+```
+```javascript
+{
+    "CliToken": "someToken",
+    "WebServerHostname": "<airflow-id>.$AWS_REGION.airflow.amazonaws.com"
+}
+```
+
+* Copy/paste the web server hostname and the CLI token and save them
+  as environment variables:
+```bash
+$ CLI_TOKEN="someToken"
+  WEB_SERVER_HOSTNAME="<airflow-id>.$AWS_REGION.airflow.amazonaws.com"
+```
+
+* Note that the CLI token is very short-lived (valid for only one or two times)
+  and the two operations (`aws mwaa create-cli-token` and
+  `CLI_TOKEN="some-token"`) must be repeated every time before
+  the following commands are perfomed
+
+* Invoke an Airflow command through the API wrapping the MWAA CLI
+  + Raw (not formatted) outpout:
+```bash
+$ curl -s --request POST "https://$WEB_SERVER_HOSTNAME/aws_mwaa/cli" --header "Authorization: Bearer $CLI_TOKEN" --header "Content-Type: text/plain" --data-raw "dags list -o json"|jq -r ".stdout" | base64 -d
+```
+```javascript
+...
+[{"dag_id": "dag_name", "filepath": "prefix/script.py", "owner": "airflow", "paused": "True"}, {"dag_id": ...}, ...]
+```
+  + CSV-formatted outpout (list of DAGs):
+```bash
+$ curl -s --request POST "https://$WEB_SERVER_HOSTNAME/aws_mwaa/cli" --header "Authorization: Bearer $CLI_TOKEN" --header "Content-Type: text/plain" --data-raw "dags list -o json"|jq -r ".stdout" | base64 -d | grep "^\[{\"dag_id\"" | jq -r ".[]|[.dag_id,.filepath,.owner,.paused]|@csv" | sed -e s/\"//g
+```
+```javascript
+...
+...
+dag_name,prefix/script.py,airflow,True
+...
+```
 

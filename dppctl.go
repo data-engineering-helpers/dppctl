@@ -104,13 +104,21 @@ func main() {
 	log.Println("MWAA/Airflow CLI token created: ", mwaaStr)
 
 	//
-	command := "version"
+	//command := "version"
+	command := "dags list -o json"
 	stdoutStr, err := service.AWSAirflowCLI(webServerHostname, cliToken,
 		command)
 	if err != nil {
 		log.Print(err)
 	}
-	log.Println("MWAA/Airflow CLI response: ", stdoutStr)
+	//log.Println("MWAA/Airflow CLI response: ", stdoutStr)
+
+	// Parse the output when the command is "dags list -o json"
+	mwaaDagMetadata, err := utilities.ParseAWSMWAADagListOutput(stdoutStr)
+	if err != nil {
+		log.Print(err)
+	}
+	log.Println("MWAA/Airflow DAGs: ", mwaaDagMetadata)
 }
 
 

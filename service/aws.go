@@ -171,6 +171,31 @@ func AWSAirflowCreateLoginToken(environment string) (string, string,
 
 func AWSAirflowCLI(webServerHostname string, cliToken string,
 	command string) (string, error) {
+	/**
+	 * As of 2023, it does not seem possible to target/use the Airflow API
+	 * directly on the AWS managed service (MWAA). One has to use
+	 * the API backend of the MWAA CLI. That is why the code for
+	 * that Go function is not straightforward.
+	 * Note that the use of the MWAA CLI API (through `curl`) is itself
+	 * convoluted. See also
+	 * https://github.com/data-engineering-helpers/dppctl/blob/main/README.md
+	 *
+	 * References:
+	 * Stack Overflow - Is it possible to access the Airflow API in AWS MWAA?
+	 *  https://stackoverflow.com/questions/67884770/is-it-possible-to-access-the-airflow-api-in-aws-mwaa
+	 * Apache Airflow - Airflow API reference guide: https://airflow.apache.org/docs/apache-airflow/stable/stable-rest-api-ref.html
+	 * AWS - Amazon Managed Workflows for Apache Airflow (MWAA) User Guide:
+	 *  https://docs.aws.amazon.com/mwaa/index.html
+	 * AWS - Accessing the Apache Airflow UI:
+	 *  https://docs.aws.amazon.com/mwaa/latest/userguide/access-airflow-ui.html
+	 * AWS - Apache Airflow CLI command reference:
+	 *  https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-cli-command-reference.html)
+	 * GitHub - AWS - Sample code for MWAA:
+	 *  https://github.com/aws-samples/amazon-mwaa-examples
+	 * GitHub - AWS - Sample code for MWAA - Bash operator script:
+	 *  https://github.com/aws-samples/amazon-mwaa-examples/tree/main/dags/bash_operator_script
+	 */
+	
 	stdoutStr := ""
 	
     //
@@ -186,7 +211,8 @@ func AWSAirflowCLI(webServerHostname string, cliToken string,
     }
 
 	// Add the headers
-	request.Header.Add("Content-Type", "text/plain")
+	//request.Header.Add("Content-Type", "text/plain")
+	request.Header.Add("Content-Type", "application/json")
 
 	bearerToken := fmt.Sprintf("Bearer %s", cliToken)
 	request.Header.Add("Authorization", bearerToken)
@@ -204,7 +230,7 @@ func AWSAirflowCLI(webServerHostname string, cliToken string,
     if err != nil {
         log.Fatal(err)
     }
-	log.Println("MWAA response data: ", string(responseData))
+	//log.Println("MWAA response data: ", string(responseData))
 
 	// Map the HTTP reponse onto a MWAAResponse structure
 	var mwaaResponseObject MWAAResponse

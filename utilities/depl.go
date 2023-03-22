@@ -126,5 +126,3 @@ func ReadSpecFile(specFilepath string) (SpecFile, error) {
     return t, nil
 }
 
-
-
