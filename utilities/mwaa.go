@@ -5,7 +5,7 @@ package utilities
 
 import (
 	"errors"
-    //"log"
+    "fmt"
 	"regexp"
 	"encoding/json"
 )
@@ -18,6 +18,7 @@ type MwaaDagMetadata struct {
 }
 
 func ParseAWSMWAADagListOutput(rawOutput string) ([]MwaaDagMetadata, error) {
+	// Retrieve, from a JSON-formatted string, the list of DAGs as a structure
 	var mwaaDagMetadataList []MwaaDagMetadata
 
 	// Extract the DAG list JSON part
@@ -34,5 +35,29 @@ func ParseAWSMWAADagListOutput(rawOutput string) ([]MwaaDagMetadata, error) {
 
 	//
 	return mwaaDagMetadataList, nil
+}
+
+func ExtractMatchingAWSMWAADagList(mwaaDagMetadataList []MwaaDagMetadata,
+	// Retrieve the DAGs, for which the name is matching the given pattern
+	namePattern string) ([]MwaaDagMetadata, error) {
+	dagList := []MwaaDagMetadata{}
+
+	// Build a RegExp from the given name pattern
+	nameRegex := fmt.Sprintf(".*%s.*", namePattern)
+	re := regexp.MustCompile(nameRegex)
+	
+	for _, dag := range mwaaDagMetadataList {
+		dagId := dag.DagId
+
+		match := re.FindStringSubmatch(dagId)
+		if (len(match) == 0) {
+			continue
+		}
+
+		dagList = append(dagList, dag)
+	}
+
+	//
+	return dagList, nil
 }
 

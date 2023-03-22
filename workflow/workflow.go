@@ -6,14 +6,15 @@ package workflow
 import (
 	"fmt"
 	"log"
-	"regexp"
 	
 	"github.com/data-engineering-helpers/dppctl/utilities"
 	"github.com/data-engineering-helpers/dppctl/service"
 )
 
 func Check(deplSpec utilities.SpecFile) {
+	// /////////////////////////////////
 	// STS - Caller identity (IAM)
+	// /////////////////////////////////
 	stsStruct, err := service.AWSGetCallerIdentity()
 	if err != nil {
 		log.Print(err)
@@ -25,7 +26,9 @@ func Check(deplSpec utilities.SpecFile) {
 	bucketName := deplSpec.StorageContainer.Name
 	bucketPrefix := deplSpec.StorageContainer.Prefix
 	
+	// /////////////////////////////////
 	// AWS S3
+	// /////////////////////////////////
 	object_list, err := service.AWSS3List(bucketName, bucketPrefix)
 	if err != nil {
 		log.Print(err)
@@ -36,7 +39,9 @@ func Check(deplSpec utilities.SpecFile) {
 		log.Println(object_metadata)
 	}
 
+	// /////////////////////////////////
 	// CodeArtifact
+	// /////////////////////////////////
 	domain_list, err := service.AWSCodeArtifact()
 	if err != nil {
 		log.Print(err)
@@ -46,7 +51,10 @@ func Check(deplSpec utilities.SpecFile) {
 		log.Println(domain)
 	}
 
+	// /////////////////////////////////
 	// MWAA/Airflow
+	// /////////////////////////////////
+	// Create a one-time MWAA CLI token
 	mwaaEnv := deplSpec.Airflow.Domain
 	webServerHostname, cliToken, _,
 		err := service.AWSAirflowCreateLoginToken(mwaaEnv)
@@ -56,7 +64,7 @@ func Check(deplSpec utilities.SpecFile) {
 	mwaaStr := fmt.Sprintf("hostname=%s token=%s", webServerHostname, cliToken)
 	log.Println("MWAA/Airflow CLI token created: ", mwaaStr)
 
-	//
+	// Invoke the MWAA CLI API for the specific command (here, the list of DAGs)
 	//command := "version"
 	command := "dags list -o json"
 	stdoutStr, err := service.AWSAirflowCLI(webServerHostname, cliToken,
@@ -67,30 +75,20 @@ func Check(deplSpec utilities.SpecFile) {
 	//log.Println("MWAA/Airflow CLI response: ", stdoutStr)
 
 	// Parse the output when the command is "dags list -o json"
-	mwaaDagMetadata, err := utilities.ParseAWSMWAADagListOutput(stdoutStr)
+	mwaaDagMetadataList, err := utilities.ParseAWSMWAADagListOutput(stdoutStr)
 	if err != nil {
 		log.Print(err)
 	}
-	//log.Println("MWAA/Airflow DAGs: ", mwaaDagMetadata)
+	//log.Println("MWAA/Airflow DAGs: ", mwaaDagMetadataList)
 
+	// Retrieve the DAGs, for which the name is matching the given pattern
 	namePattern := deplSpec.Airflow.Dag.NamePattern
-	log.Println("Retrieving all the Airflow DAG following the name pattern: ",
+	log.Println("Retrieving all the Airflow DAG matching the following name pattern:",
 		namePattern)
 
-	// Extract the DAG list JSON part
-	nameRegex := fmt.Sprintf(".*%s.*", namePattern)
-	re := regexp.MustCompile(nameRegex)
+	dagList, err := utilities.ExtractMatchingAWSMWAADagList(mwaaDagMetadataList,
+		namePattern)
 	
-	for _, dag := range mwaaDagMetadata {
-		dagId := dag.DagId
-
-		match := re.FindStringSubmatch(dagId)
-		if (len(match) == 0) {
-			continue
-		}
-
-		log.Println("MWAA/Airflow specific DAG: ", dag)
-	}
-	
+	log.Println("List of MWAA/Airflow DAGs mathcing the name pattern:", dagList)
 }
 
