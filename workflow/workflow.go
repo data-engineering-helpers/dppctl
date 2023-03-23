@@ -42,30 +42,46 @@ func Check(deplSpec utilities.SpecFile) {
 	// /////////////////////////////////
 	// CodeArtifact
 	// /////////////////////////////////
-	domain_list, err := service.AWSCodeArtifactListDomains()
-	if err != nil {
-		log.Print(err)
-	}
-	log.Println("List of domains within the CodeArtifact service:")
-	for _, domain := range domain_list {
-		log.Println(domain)
-	}
-
+	// List of the domains
 	//
 	caDomainName := deplSpec.ArtifactRepo.Domain
 	caDomainOwner := deplSpec.ArtifactRepo.AccountId
 	caRepoName := deplSpec.ArtifactRepo.Name
-	caRepoFormatStr := deplSpec.ArtifactRepo.Format
+	caFormatStr := deplSpec.ArtifactRepo.Format
 	packageName := deplSpec.Container.Module.Name
-	//packageVersion := deplSpec.Container.Module.Version
+	packageVersion := deplSpec.Container.Module.Version
 
-	caRepoFormat, err := service.AWSCodeArtifactFormatFromString(caRepoFormatStr)
+	caFormat, err := service.AWSCodeArtifactFormatFromString(caFormatStr)
     if err != nil {
-		errMsg := fmt.Sprintf("The %s CodeArtifact repository format is not known")
+		errMsg := fmt.Sprintf("The %s CodeArtifact format is not known",
+		caFormatStr)
         log.Fatalf(errMsg, err)
     }
-	service.AWSCodeArtifactListPackageVersions(caDomainName, caDomainOwner,
-		caRepoName, caRepoFormat, packageName)
+
+	pkgVersions, err := service.AWSCodeArtifactListPackageVersions(caDomainName,
+		caDomainOwner, caRepoName, caFormat, packageName)
+    if err != nil {
+		errMsg := fmt.Sprintf("No versioned package can be retrieved from CodeArtifact repository for Domain-name=%s Domain-owner=%s Repo-name=%s Format=%s Pkg-name=%s",
+		caDomainName, caDomainOwner, caRepoName, caFormat, packageName)
+        log.Fatalf(errMsg, err)
+    }
+	
+	log.Println("List of versioned packages within the CodeArtifact repository:")
+	for _, pkgVersion := range pkgVersions {
+		log.Println(pkgVersion)
+	}
+
+	//
+	pkgDetails, err := service.AWSCodeArtifactDescribePackageVersion(caDomainName,
+		caDomainOwner, caRepoName, caFormat, packageName, packageVersion)
+    if err != nil {
+		errMsg := fmt.Sprintf("No versioned package can be retrieved from CodeArtifact repository for Domain-name=%s Domain-owner=%s Repo-name=%s Format=%s Pkg-name=%s Pkg-version=%s",
+			caDomainName, caDomainOwner, caRepoName, caFormat,
+			packageName, packageVersion)
+        log.Fatalf(errMsg + ": %v", err)
+    }
+	
+	log.Println("Details for the versioned package within the CodeArtifact repository:", pkgDetails)
 	
 	// /////////////////////////////////
 	// MWAA/Airflow

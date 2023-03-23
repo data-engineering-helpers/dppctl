@@ -154,7 +154,7 @@ func AWSCodeArtifactListPackageVersions(domainName string,
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/types/types.go
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/api_op_ListPackageVersions.go
 	
-    messages := []string {}
+    pkgVersions := []string {}
 
     // Using the Config value, create the CodeArtifact client
     svc := codeartifact.NewFromConfig(awsConfig)
@@ -173,25 +173,35 @@ func AWSCodeArtifactListPackageVersions(domainName string,
     }
 
 	// https://docs.aws.amazon.com/codeartifact/latest/APIReference/API_PackageVersionSummary.html
-    for _, version := range resp.Versions {
-		message := fmt.Sprintf("Origin=%s Revision=%s Version=%s Status=%s",
-			version.Origin, version.Revision, version.Version,
-			version.Status)
-		messages = append(messages, message)
+    for _, versionStruct := range resp.Versions {
+		origin := versionStruct.Origin
+		domainEntryPoint := origin.DomainEntryPoint
+		externalConnectionName := aws.ToString(domainEntryPoint.ExternalConnectionName)
+		repositoryName := aws.ToString(domainEntryPoint.RepositoryName)
+		originType := origin.OriginType
+		version := aws.ToString(versionStruct.Version)
+		revision := aws.ToString(versionStruct.Revision)
+		status := versionStruct.Status
+
+		message := fmt.Sprintf("Pkg-name=%s Version=%s Status=%s Revision=%s Origin=(domain-entry-point=%s, repository-name=%s, origin-type=%s)",
+			packageName, version, status, revision,
+			externalConnectionName, repositoryName, originType)
+		//log.Println("Package details:", message)
+		pkgVersions = append(pkgVersions, message)
     }
 
     //
-    return messages, nil
+    return pkgVersions, nil
 }
 
 func AWSCodeArtifactDescribePackageVersion(domainName string,
 	domainOwner string, repoName string, repoFormat awscatypes.PackageFormat,
-	packageName string, packageVersion string) ([]string, error) {
+	packageName string, packageVersion string) (string, error) {
 	// References:
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/types/types.go
 	// * https://github.com/aws/aws-sdk-go-v2/blob/main/service/codeartifact/api_op_DescribePackageVersion.go
 	
-    messages := []string {}
+    var pkgDetailsStr string
 
     // Using the Config value, create the CodeArtifact client
     svc := codeartifact.NewFromConfig(awsConfig)
@@ -207,17 +217,35 @@ func AWSCodeArtifactDescribePackageVersion(domainName string,
 	}
     resp, err := svc.DescribePackageVersion(context.TODO(), params)
     if err != nil {
-        log.Fatalf("failed to describe package for the specific version, %v",
+		errMsg := fmt.Sprintf("Failed to describe package for the specific versioned package, %v",
 			err)
+		log.Println(errMsg)
+        return pkgDetailsStr, err
     }
 
 	// https://docs.aws.amazon.com/codeartifact/latest/APIReference/API_PackageVersionDescription.html
-	// TODO: PackageVersion
 	packageVersionDesc := resp.PackageVersion
-	log.Println("Package version: ", packageVersionDesc)
+	displayName := aws.ToString(packageVersionDesc.DisplayName)
+	homePage := aws.ToString(packageVersionDesc.HomePage)
+	licenses := packageVersionDesc.Licenses
+	namespace := aws.ToString(packageVersionDesc.Namespace)
+	publishedTime := packageVersionDesc.PublishedTime
+	revision := aws.ToString(packageVersionDesc.Revision)
+	status := packageVersionDesc.Status
+	sourceCodeRepository := aws.ToString(packageVersionDesc.SourceCodeRepository)
+	origin := packageVersionDesc.Origin
+	domainEntryPoint := origin.DomainEntryPoint
+	externalConnectionName := aws.ToString(domainEntryPoint.ExternalConnectionName)
+	repositoryName := aws.ToString(domainEntryPoint.RepositoryName)
+	originType := origin.OriginType
+
+	pkgDetailsStr = fmt.Sprintf("Pkg-name=%s Display-name=%s Version=%s Status=%s Revision=%s Homepage=%s Namespace=%s Source-code-repo=%s Published-time=%s Licenses=%s Origin=(domain-entry-point=%s, repository-name=%s, origin-type=%s)",
+		packageName, displayName, packageVersion, status, revision, homePage,
+		namespace, sourceCodeRepository, publishedTime, licenses,
+		externalConnectionName, repositoryName, originType)
 	
     //
-    return messages, nil
+    return pkgDetailsStr, nil
 }
 
 func AWSAirflowCreateLoginToken(environment string) (string, string,
