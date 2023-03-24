@@ -82,6 +82,53 @@ func Check(deplSpec utilities.SpecFile) {
     }
 	
 	log.Println("Details for the versioned package within the CodeArtifact repository:", pkgDetails)
+
+	// /////////////////////////////////
+	// Elastic Container Registry (ECR)
+	// /////////////////////////////////
+
+	/*
+	// List of the repositories
+	ecrRepoList, err := service.AWSECRListRepositories()
+    if err != nil {
+		errMsg := fmt.Sprintf("No repository can be retrieved from ECR service")
+        log.Fatalf(errMsg, err)
+    }
+	
+	log.Println("List of repositories within the ECR service:")
+	for _, ecrRepo := range ecrRepoList {
+		log.Println(ecrRepo)
+	}
+	*/
+
+	// List of the image tags
+	//
+	ecrRepoName := deplSpec.ContainerRepo.Name
+	ecrImgList, err := service.AWSECRListImages(ecrRepoName)
+    if err != nil {
+		errMsg := fmt.Sprintf("No image can be retrieved from ECR service for the %s repository",
+			ecrRepoName)
+        log.Fatalf(errMsg, err)
+    }
+	
+	log.Println("List of repositories within the ECR service for", ecrRepoName)
+	for _, ecrImg := range ecrImgList {
+		log.Println(ecrImg)
+	}
+	
+	// Description of the images
+	//
+	ecrImgDetailList, err := service.AWSECRDescribeImages(ecrRepoName)
+    if err != nil {
+		errMsg := fmt.Sprintf("No image can be retrieved from ECR service for the %s repository",
+			ecrRepoName)
+        log.Fatalf(errMsg, err)
+    }
+	
+	log.Println("List of image details within the ECR service for", ecrRepoName)
+	for _, ecrImg := range ecrImgDetailList {
+		log.Println(ecrImg)
+	}
 	
 	// /////////////////////////////////
 	// MWAA/Airflow
