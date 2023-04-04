@@ -1,6 +1,9 @@
 Getting started with Go for Data Processing Pipeline (DPP) CLI tool
 ===================================================================
 
+[![OpenSSF
+Scorecard](https://api.securityscorecards.dev/projects/github.com/data-engineering-helpers/dppctl/badge)](https://api.securityscorecards.dev/projects/github.com/data-engineering-helpers/dppctl)
+
 # Overview
 [This project](https://github.com/data-engineering-helpers/dppctl)
 intends to develop and maintain a command-line (CLI) utility in Go
