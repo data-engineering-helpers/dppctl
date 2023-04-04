@@ -13,12 +13,13 @@ import (
  * Check that the default/sample deployment specification file
  * is parsed correctly
  */
-func TestHelloName(t *testing.T) {
+func ReadSpecFile(t *testing.T) {
 	// Specification of the deployment
     specFilepath := "depl/aws-dev-sample.yaml"
 	deplSpec, err := utilities.ReadSpecFile(specFilepath)
 	if err != nil {
-        t.Fatalf(`utilities.ReadSpecFile(specFilepath) = %q, %v, want match for %#q`, deplSpec, err, specFilepath)
+        t.Fatalf(`utilities.ReadSpecFile() = %q, %v, parsed %#q spec file`,
+			deplSpec, err, specFilepath)
 	}
 	
 }
