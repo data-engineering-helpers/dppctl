@@ -29,7 +29,7 @@ these companies.
 
 * Import/download the module:
 ```bash
-$ go get github.com/data-engineering-helpers/dppctl@vx.y.z
+$ go build
 ```
 
 * Clone and edit the YAML deployment specification. For instance,
@@ -41,18 +41,18 @@ $ vi depl/aws-dev.yaml
 
 * Check the version of the `dppctl` utility:
 ```bash
-$ dppctl -v
+$ ./dppctl -v
 [dppctl] 0.0.x-alpha.x
 ```
 
 * Launch the `dppctl` utility in checking mode (which is the default one):
 ```bash
-$ dppctl -f depl/aws-dev.yaml
+$ ./dppctl -f depl/aws-dev.yaml
 ```
 
 * Launch the `dppctl` utility in deployment mode:
 ```bash
-$ dppctl -f depl/aws-dev.yaml -c deploy
+$ ./dppctl -f depl/aws-dev.yaml -c deploy
 ```
 
 # Publish the module

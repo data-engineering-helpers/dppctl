@@ -13,7 +13,7 @@ import (
 	"github.com/data-engineering-helpers/dppctl/workflow"
 )
 
-const AppVersion = "0.0.1-alpha.1"
+const AppVersion = "0.0.2-alpha.1"
 
 var (
 	versionFlag bool

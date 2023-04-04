@@ -5,27 +5,21 @@ package main
 
 import (
   "testing"
-  "regexp"
+	
+	"github.com/data-engineering-helpers/dppctl/utilities"
 )
 
-// TestHelloName calls greetings.Hello with a name, checking
-// for a valid return value.
+/**
+ * Check that the default/sample deployment specification file
+ * is parsed correctly
+ */
 func TestHelloName(t *testing.T) {
-    name := "Gladys"
-    want := regexp.MustCompile(`\b`+name+`\b`)
-    msg, err := Hello("Gladys")
-    if !want.MatchString(msg) || err != nil {
-        t.Fatalf(`Hello("Gladys") = %q, %v, want match for %#q, nil`, msg, err, want)
-    }
+	// Specification of the deployment
+    specFilepath := "depl/aws-dev-sample.yaml"
+	deplSpec, err := utilities.ReadSpecFile(specFilepath)
+	if err != nil {
+        t.Fatalf(`utilities.ReadSpecFile(specFilepath) = %q, %v, want match for %#q`, deplSpec, err, specFilepath)
+	}
+	
 }
-
-// TestHelloEmpty calls greetings.Hello with an empty string,
-// checking for an error.
-func TestHelloEmpty(t *testing.T) {
-    msg, err := Hello("")
-    if msg != "" || err == nil {
-        t.Fatalf(`Hello("") = %q, %v, want "", error`, msg, err)
-    }
-}
-
 
