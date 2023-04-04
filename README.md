@@ -68,9 +68,9 @@ $ go test
 
 * Tag the Git repository:
 ```bash
-$ git commit -m "[Release][Go] v0.0.x-alpha.x"
+$ git commit -m "[Release] v0.0.x-alpha.x"
 $ git push
-$ git tag -a v0.0.x-alpha.x -m "[Release][Go] v0.0.x-alpha.x"
+$ git tag -a v0.0.x-alpha.x -m "[Release] v0.0.x-alpha.x"
 $ git push --tags
 ```
 
